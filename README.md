@@ -70,6 +70,8 @@ By default the plugin analyses the `name` attribute of the containers child node
 
 If the element is an input, the value will be replaced otherwise the plugin overrides the current text.
 
+If you have multiple geocomplete fields on a page, use `detailsScope` option scope your 'details' container.
+
 **Note**: Some address components such as "country" return an additional `short_name`. You can access them by simply adding `_short` at the end of the type.
 
 Simple Example:
@@ -125,6 +127,7 @@ $("#my_input").geocomplete({
 
 * `map` - Might be a selector, a jQuery object or a DOM element. Default is `false` which shows no map.
 * `details` - The container that should be populated with data. Defaults to `false` which ignores the setting.
+* 'detailsScope' - Allows you to scope the 'details' container and have multiple geocomplete fields on one page. Must be a parent of the input. Default is 'null'
 * `location` - Location to initialize the map on. Might be an address `string` or an `array` with [latitude, longitude] or a `google.maps.LatLng`object. Default is `false` which shows a blank map.
 * `bounds` - Whether to snap geocode search to map bounds. Default: `true` if false search globally. Alternatively pass a custom LatLngBounds object
 * `detailsAttribute` - The attribute's name to use as an indicator. Default: `"name"`
@@ -159,6 +162,8 @@ The following events are supported:
 * `"geocode:multiple"` - Fired immediately after the "result" event if multiple results were found. Passes an array of all results.
 * `"geocode:dragged"` - Fired when the marker's position was modified manually. Passes the updated location.
 * `"geocode:click"` - Fired when 'click' event occurs on the map. Passes the location where the click had place.
+* `"geocode:mapdragged"` - Fired when the map bounds are modified by dragging manually. Passes the location of the current map center.
+* `"geocode:idle"` - Fired when the map becomes idle after panning or zooming. Passes the location of the current map center.
 
 ## Methods and Properties
 

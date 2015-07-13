@@ -19,6 +19,7 @@
   //
   // * `map` - Might be a selector, an jQuery object or a DOM element. Default is `false` which shows no map.
   // * `details` - The container that should be populated with data. Defaults to `false` which ignores the setting.
+  // * 'detailsScope' - Allows you to scope the 'details' container and have multiple geocomplete fields on one page. Must be a parent of the input. Default is 'null'
   // * `location` - Location to initialize the map on. Might be an address `string` or an `array` with [latitude, longitude] or a `google.maps.LatLng`object. Default is `false` which shows a blank map.
   // * `bounds` - Whether to snap geocode search to map bounds. Default: `true` if false search globally. Alternatively pass a custom `LatLngBounds object.
   // * `autoselect` - Automatically selects the highlighted item or the first item from the suggestions list on Enter.
@@ -42,6 +43,7 @@
     map: false,
     details: false,
     detailsAttribute: "name",
+    detailsScope: null,
     autoselect: true,
     location: false,
 
@@ -122,6 +124,20 @@
         this.map,
         'click',
         $.proxy(this.mapClicked, this)
+      );
+ 
+      // add dragend even listener on the map
+      google.maps.event.addListener(
+        this.map,
+        'dragend',
+        $.proxy(this.mapDragged, this)
+      );
+      
+      // add idle even listener on the map
+      google.maps.event.addListener(
+        this.map,
+        'idle',
+        $.proxy(this.mapIdle, this)
       );
 
       google.maps.event.addListener(
@@ -233,8 +249,13 @@
     initDetails: function(){
       if (!this.options.details){ return; }
 
-      var $details = $(this.options.details),
-        attribute = this.options.detailsAttribute,
+      if(this.options.detailsScope) {
+        var $details = $(this.input).parents(this.options.detailsScope).find(this.options.details);
+      } else {
+        var $details = $(this.options.details);
+      }
+
+      var attribute = this.options.detailsAttribute,
         details = {};
 
       function setDetail(value){
@@ -306,6 +327,10 @@
     // Requests details about a given location.
     // Additionally it will bias the requests to the provided bounds.
     geocode: function(request){
+      // Don't geocode if the requested address is empty
+      if (!request.address) {
+        return;
+      }
       if (this.options.bounds && !request.bounds){
         if (this.options.bounds === true){
           request.bounds = this.map && this.map.getBounds();
@@ -481,12 +506,22 @@
     mapClicked: function(event) {
         this.trigger("geocode:click", event.latLng);
     },
+   
+    // Fire the "geocode:mapdragged" event and pass the current position of the map center.
+    mapDragged: function(event) {
+      this.trigger("geocode:mapdragged", this.map.getCenter());
+    },
+
+    // Fire the "geocode:idle" event and pass the current position of the map center.
+    mapIdle: function(event) {
+      this.trigger("geocode:idle", this.map.getCenter());
+    },
 
     mapZoomed: function(event) {
       this.trigger("geocode:zoom", this.map.getZoom());
     },
 
-    // Restore the old position of the marker to the last now location.
+    // Restore the old position of the marker to the last knwon location.
     resetMarker: function(){
       this.marker.setPosition(this.data.location);
       this.setDetail(this.details.lat, this.data.location.lat());
